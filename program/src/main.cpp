@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <bitset>
-#include <windows.h>
 
 std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789. ";
 
