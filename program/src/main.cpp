@@ -1,8 +1,8 @@
+#include "serial.hpp"
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <bitset>
-#include <vector>
+#include <windows.h>
 
 std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789. ";
 
@@ -13,40 +13,9 @@ std::string* to_segments(std::string message);
 
 int main(){
 
-    std::string base_location_name = "/dev/ttyACM";
-
-    #ifdef _WIN32
-        base_location_name = "COM";
-    #endif
-
-    std::string arduino_location = "";
-    int attempts = 0;
-
-    while(arduino_location == "" && attempts < 5){
-
-        attempts++;
-        std::vector<std::string> possible_names;
-        for(int i = 0; i < 256; i++){
-
-            std::string check_name = base_location_name + std::to_string(i);
-            std::ifstream arduino_check(check_name.c_str());
-            if(arduino_check.good()){
-
-                arduino_location = check_name;
-            }
-        }
-    }
-
-    if(arduino_location == ""){
-
-        std::cout << "Error, could not detect device!" << std::endl;
-        return 0;
-    }
-
-    std::cout << "Device detected at " << arduino_location << std::endl;
-
     std::string input = "";
-    system(("stty -F " + arduino_location + " -hupcl").c_str());
+    Serial arduino_out = Serial();
+    arduino_out.open();
     while(input != "exit"){
 
         std::cout << "Enter your input: ";
@@ -57,23 +26,21 @@ int main(){
             break;
         }
 
-        std::ofstream arduino_out;
-        std::string* segments = to_segments(input);
-        arduino_out.open(arduino_location);
         std::cout << "Outputing: ";
 
+        std::string* segments = to_segments(input);
+        char out_buffer[input.length()];
         for(unsigned int i = 0; i < input.length(); i++){
 
             std::cout << segments[i] << " ";
-            arduino_out << as_byte(segments[i]);
+            out_buffer[i] = as_byte(segments[i]);
         }
-
-        arduino_out.close();
+        arduino_out.write(out_buffer, input.length());
 
         std::cout << std::endl;
     }
 
-    system(("stty -F " + arduino_location + " hupcl").c_str());
+    arduino_out.close();
 
     return 0;
 }
